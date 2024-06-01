@@ -1,0 +1,320 @@
+Backend (Node.js with Express and MongoDB)
+Initialize the Project:
+
+sh
+Copy code
+mkdir job-board
+cd job-board
+mkdir server
+cd server
+npm init -y
+npm install express mongoose cors bcryptjs jsonwebtoken multer
+Create Server Files:
+
+index.js:
+
+js
+Copy code
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const app = express();
+
+mongoose.connect('mongodb://localhost:27017/job-board', { useNewUrlParser: true, useUnifiedTopology: true });
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/', (req, res) => {
+    res.send('Welcome to the Job Board API');
+});
+
+// Job routes
+const jobRoutes = require('./routes/jobs');
+app.use('/api/jobs', jobRoutes);
+
+// User routes
+const userRoutes = require('./routes/users');
+app.use('/api/users', userRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+models/Job.js:
+
+js
+Copy code
+const mongoose = require('mongoose');
+
+const jobSchema = new mongoose.Schema({
+    title: String,
+    description: String,
+    company: String,
+    location: String,
+    salary: String,
+    postedDate: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Job', jobSchema);
+models/User.js:
+
+js
+Copy code
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema({
+    username: { type: String, unique: true },
+    email: { type: String, unique: true },
+    password: String,
+    role: { type: String, enum: ['employer', 'candidate'] }
+});
+
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+});
+
+module.exports = mongoose.model('User', userSchema);
+routes/jobs.js:
+
+js
+Copy code
+const express = require('express');
+const router = express.Router();
+const Job = require('../models/Job');
+
+// Get all jobs
+router.get('/', async (req, res) => {
+    const jobs = await Job.find();
+    res.json(jobs);
+});
+
+// Get a single job
+router.get('/:id', async (req, res) => {
+    const job = await Job.findById(req.params.id);
+    res.json(job);
+});
+
+// Create a new job
+router.post('/', async (req, res) => {
+    const job = new Job(req.body);
+    await job.save();
+    res.status(201).json(job);
+});
+
+// Update a job
+router.put('/:id', async (req, res) => {
+    const job = await Job.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(job);
+});
+
+// Delete a job
+router.delete('/:id', async (req, res) => {
+    await Job.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Job deleted' });
+});
+
+module.exports = router;
+routes/users.js:
+
+js
+Copy code
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+// Register a new user
+router.post('/register', async (req, res) => {
+    try {
+        const user = new User(req.body);
+        await user.save();
+        res.status(201).json(user);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Login
+router.post('/login', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        const token = jwt.sign({ id: user._id, role: user.role }, 'secret');
+        res.json({ token, user });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+module.exports = router;
+Frontend (React)
+Initialize React Project:
+
+sh
+Copy code
+cd ..
+npx create-react-app client
+cd client
+npm install axios react-router-dom
+Create React Components:
+
+App.js:
+
+jsx
+Copy code
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import HomePage from './components/HomePage';
+import JobListingsPage from './components/JobListingsPage';
+import JobDetailPage from './components/JobDetailPage';
+import EmployerDashboard from './components/EmployerDashboard';
+import CandidateDashboard from './components/CandidateDashboard';
+import Login from './components/Login';
+import Register from './components/Register';
+
+function App() {
+    return (
+        <Router>
+            <Switch>
+                <Route path="/" exact component={HomePage} />
+                <Route path="/jobs" exact component={JobListingsPage} />
+                <Route path="/jobs/:id" component={JobDetailPage} />
+                <Route path="/employer-dashboard" component={EmployerDashboard} />
+                <Route path="/candidate-dashboard" component={CandidateDashboard} />
+                <Route path="/login" component={Login} />
+                <Route path="/register" component={Register} />
+            </Switch>
+        </Router>
+    );
+}
+
+export default App;
+HomePage.js:
+
+jsx
+Copy code
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const HomePage = () => {
+    const [jobs, setJobs] = useState([]);
+
+    useEffect(() => {
+        axios.get('http://localhost:5000/api/jobs')
+            .then(response => {
+                setJobs(response.data);
+            })
+            .catch(error => {
+                console.error('There was an error fetching the jobs!', error);
+            });
+    }, []);
+
+    return (
+        <div>
+            <h1>Welcome to the Job Board</h1>
+            <h2>Featured Jobs</h2>
+            <ul>
+                {jobs.map(job => (
+                    <li key={job._id}>
+                        <h3>{job.title}</h3>
+                        <p>{job.company}</p>
+                        <p>{job.location}</p>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+export default HomePage;
+JobListingsPage.js:
+
+jsx
+Copy code
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
+
+const JobListingsPage = () => {
+    const [jobs, setJobs] = useState([]);
+
+    useEffect(() => {
+        axios.get('http://localhost:5000/api/jobs')
+            .then(response => {
+                setJobs(response.data);
+            })
+            .catch(error => {
+                console.error('There was an error fetching the jobs!', error);
+            });
+    }, []);
+
+    return (
+        <div>
+            <h1>Job Listings</h1>
+            <ul>
+                {jobs.map(job => (
+                    <li key={job._id}>
+                        <Link to={`/jobs/${job._id}`}>
+                            <h3>{job.title}</h3>
+                            <p>{job.company}</p>
+                            <p>{job.location}</p>
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+export default JobListingsPage;
+JobDetailPage.js:
+
+jsx
+Copy code
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const JobDetailPage = ({ match }) => {
+    const [job, setJob] = useState(null);
+
+    useEffect(() => {
+        axios.get(`http://localhost:5000/api/jobs/${match.params.id}`)
+            .then(response => {
+                setJob(response.data);
+            })
+            .catch(error => {
+                console.error('There was an error fetching the job details!', error);
+            });
+    }, [match.params.id]);
+
+    if (!job) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <div>
+            <h1>{job.title}</h1>
+            <p>{job.description}</p>
+            <p>{job.company}</p>
+            <p>{job.location}</p>
+            <p>{job.salary}</p>
+        </div>
+    );
+}
+
+export default JobDetailPage;
+EmployerDashboard.js:
+
+jsx
+Copy code
+import React, { useState } from 'react'
