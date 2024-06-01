@@ -1,0 +1,128 @@
+HTML Code
+Save this code in a file named index.html.
+
+html
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tribute Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tribute to Jane Doe</h1>
+        </header>
+        <main>
+            <section class="intro">
+                <img src="jane_doe.jpg" alt="Jane Doe">
+                <p>Jane Doe was a remarkable individual whose contributions to the field of science have inspired countless others. Her dedication, intelligence, and compassion made her a role model for many.</p>
+            </section>
+            <section class="qualities">
+                <h2>Admirable Qualities</h2>
+                <ul>
+                    <li>Intelligent and innovative</li>
+                    <li>Compassionate and caring</li>
+                    <li>Determined and resilient</li>
+                    <li>Excellent communicator</li>
+                    <li>Dedicated to lifelong learning</li>
+                </ul>
+            </section>
+            <section class="legacy">
+                <h2>Legacy</h2>
+                <p>Jane Doe's legacy continues to impact the world. Her groundbreaking research has paved the way for new discoveries and advancements in science. Her commitment to education and mentorship has empowered future generations of scientists.</p>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2024 Tribute to Jane Doe. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
+CSS Code
+Save this code in a file named styles.css.
+
+css
+Copy code
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    text-align: center;
+    padding: 10px 0;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    color: #2c3e50;
+}
+
+main {
+    padding: 20px 0;
+}
+
+.intro {
+    text-align: center;
+}
+
+.intro img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.intro p {
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+.qualities,
+.legacy {
+    margin-bottom: 20px;
+}
+
+.qualities h2,
+.legacy h2 {
+    font-size: 2em;
+    color: #2980b9;
+    margin-bottom: 10px;
+}
+
+.qualities ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.qualities ul li {
+    font-size: 1.2em;
+    line-height: 1.6;
+}
+
+footer {
+    text-align: center;
+    padding: 10px 0;
+    background-color: #2c3e50;
+    color: #fff;
+}
+
+footer p {
+    margin: 0;
+}
